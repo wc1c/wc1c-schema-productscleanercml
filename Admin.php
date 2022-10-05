@@ -206,7 +206,7 @@ class Admin
 
 		$fields['clean'] =
 		[
-			'title' => __('Cleaning', 'wc1c'),
+			'title' => __('Enable', 'wc1c'),
 			'type' => 'checkbox',
 			'label' => __('Check the box to enable this feature. Disabled by default.', 'wc1c'),
 			'description' => __('All products received via the CommerceML protocol and matching keys for synchronization will be placed in the Recycle Bin.', 'wc1c'),
