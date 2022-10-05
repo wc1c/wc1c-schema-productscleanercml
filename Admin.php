@@ -44,7 +44,6 @@ class Admin
 		add_filter('wc1c_configurations-update_form_load_fields', [$this, 'configurationsFieldsReceiver'], 10, 1);
 
 		add_filter('wc1c_configurations-update_form_load_fields', [$this, 'configurationsFieldsSync'], 30, 1);
-
 		add_filter('wc1c_configurations-update_form_load_fields', [$this, 'configurationsFieldsClean'], 70, 1);
 
 		add_filter('wc1c_configurations-update_form_load_fields', [$this, 'configurationsFieldsLogs'], 110, 1);
@@ -163,7 +162,7 @@ class Admin
 	{
 		$fields['title_sync'] =
 		[
-			'title' => __('Sync options', 'wc1c'),
+			'title' => __('Sync', 'wc1c'),
 			'type' => 'title',
 			'description' => sprintf
 			('%s %s',
@@ -200,7 +199,7 @@ class Admin
 	{
 		$fields['title_clean'] =
 		[
-			'title' => __('Cleaning options', 'wc1c'),
+			'title' => __('Cleaning', 'wc1c'),
 			'type' => 'title',
 			'description' => __('Comprehensive settings for cleaning options.', 'wc1c'),
 		];
