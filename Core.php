@@ -1,4 +1,4 @@
-<?php namespace Wc1c\Schemas\Productscleanercml;
+<?php namespace Wc1c\Main\Schemas\Productscleanercml;
 
 defined('ABSPATH') || exit;
 
@@ -8,14 +8,14 @@ use Wc1c\Cml\Contracts\ProductDataContract;
 use Wc1c\Cml\Decoder;
 use Wc1c\Cml\Entities\Catalog;
 use Wc1c\Cml\Reader;
-use Wc1c\Exceptions\Exception;
-use Wc1c\Schemas\Abstracts\SchemaAbstract;
+use Wc1c\Main\Exceptions\Exception;
+use Wc1c\Main\Schemas\Abstracts\SchemaAbstract;
 use Wc1c\Wc\Products\Factory;
 
 /**
  * Core
  *
- * @package Wc1c\Schemas\Productscleanercml
+ * @package Wc1c\Main\Schemas\Productscleanercml
  */
 class Core extends SchemaAbstract
 {
@@ -42,8 +42,8 @@ class Core extends SchemaAbstract
 		$this->setId('productscleanercml');
 		$this->setVersion('0.1.1');
 
-		$this->setName(__('Cleaning of products via CommerceML', 'wc1c'));
-		$this->setDescription(__('Cleaning of existing products in WooCommerce according to the nomenclature from 1C via the CommerceML protocol.', 'wc1c'));
+		$this->setName(__('Cleaning of products via CommerceML', 'wc1c-main'));
+		$this->setDescription(__('Cleaning of existing products in WooCommerce according to the nomenclature from 1C via the CommerceML protocol.', 'wc1c-main'));
 	}
 
 	/**
@@ -133,7 +133,7 @@ class Core extends SchemaAbstract
 		}
 		catch(Exception $exception)
 		{
-			$this->log()->error(__('The file cannot be processed. DecoderCML threw an exception.', 'wc1c'), ['exception' => $exception]);
+			$this->log()->error(__('The file cannot be processed. DecoderCML threw an exception.', 'wc1c-main'), ['exception' => $exception]);
 			return false;
 		}
 
@@ -148,11 +148,11 @@ class Core extends SchemaAbstract
 		}
 		catch(Exception $exception)
 		{
-			$this->log()->error(__('The file cannot be processed. ReaderCML threw an exception.', 'wc1c'), ['exception' => $exception]);
+			$this->log()->error(__('The file cannot be processed. ReaderCML threw an exception.', 'wc1c-main'), ['exception' => $exception]);
 			return false;
 		}
 
-		$this->log()->debug(__('Filetype:', 'wc1c') . ' ' . $reader->getFiletype(), ['filetype' => $reader->getFiletype()]);
+		$this->log()->debug(__('Filetype:', 'wc1c-main') . ' ' . $reader->getFiletype(), ['filetype' => $reader->getFiletype()]);
 
 		if(has_filter('wc1c_schema_productscleanercml_file_processing_reader'))
 		{
@@ -167,7 +167,7 @@ class Core extends SchemaAbstract
 			}
 			catch(Exception $e)
 			{
-				$this->log()->error(__('Import file processing not completed. ReaderCML threw an exception.', 'wc1c'), ['exception' => $e]);
+				$this->log()->error(__('Import file processing not completed. ReaderCML threw an exception.', 'wc1c-main'), ['exception' => $e]);
 				break;
 			}
 		}
@@ -187,7 +187,7 @@ class Core extends SchemaAbstract
 	{
 		if(wc1c()->timer()->getMaximum() !== 0 && !wc1c()->timer()->isRemainingBiggerThan(5))
 		{
-			throw new Exception(__('There was not enough time to load all the data.', 'wc1c'));
+			throw new Exception(__('There was not enough time to load all the data.', 'wc1c-main'));
 		}
 	}
 
@@ -226,7 +226,7 @@ class Core extends SchemaAbstract
 
 			if(!$classifier instanceof ClassifierDataContract)
 			{
-				$this->log()->debug(__('Classifier !instanceof ClassifierDataContract. Skip processing.', 'wc1c'), ['data' => $classifier]);
+				$this->log()->debug(__('Classifier !instanceof ClassifierDataContract. Skip processing.', 'wc1c-main'), ['data' => $classifier]);
 				return;
 			}
 
@@ -238,7 +238,7 @@ class Core extends SchemaAbstract
 			}
 			catch(Exception $e)
 			{
-				$this->log()->warning(__('An exception was thrown while saving the classifier.', 'wc1c'), ['exception' => $e]);
+				$this->log()->warning(__('An exception was thrown while saving the classifier.', 'wc1c-main'), ['exception' => $e]);
 			}
 
 			$reader->next();
@@ -319,7 +319,7 @@ class Core extends SchemaAbstract
 
 			if(!$product instanceof ProductDataContract)
 			{
-				$this->log()->debug(__('Product !instanceof ProductDataContract. Skip processing.', 'wc1c'), ['data' => $product]);
+				$this->log()->debug(__('Product !instanceof ProductDataContract. Skip processing.', 'wc1c-main'), ['data' => $product]);
 				return;
 			}
 
@@ -329,7 +329,7 @@ class Core extends SchemaAbstract
 			}
 			catch(Exception $e)
 			{
-				$this->log()->warning(__('An exception was thrown while saving the product.', 'wc1c'), ['exception' => $e]);
+				$this->log()->warning(__('An exception was thrown while saving the product.', 'wc1c-main'), ['exception' => $e]);
 			}
 
 			$reader->next();
@@ -347,11 +347,11 @@ class Core extends SchemaAbstract
 	 */
 	public function processingProductsItem($external_product, $reader)
 	{
-		$this->log()->info(__('Processing a product from a catalog of products.', 'wc1c'), ['product_id' => $external_product->getId(), 'product_characteristic_id' => $external_product->getCharacteristicId()]);
+		$this->log()->info(__('Processing a product from a catalog of products.', 'wc1c-main'), ['product_id' => $external_product->getId(), 'product_characteristic_id' => $external_product->getCharacteristicId()]);
 
 		if('yes' !== $this->getOptions('clean', 'no'))
 		{
-			$this->log()->info(__('Cleaning of products is disabled. Processing skipped.', 'wc1c'), ['product_id' => $external_product->getId(), 'product_characteristic_id' => $external_product->getCharacteristicId()]);
+			$this->log()->info(__('Cleaning of products is disabled. Processing skipped.', 'wc1c-main'), ['product_id' => $external_product->getId(), 'product_characteristic_id' => $external_product->getCharacteristicId()]);
 			return;
 		}
 
@@ -365,11 +365,11 @@ class Core extends SchemaAbstract
 		{
 			$product_id = $product_factory->findIdsByExternalIdAndCharacteristicId($external_product->getId(), $external_product->getCharacteristicId());
 
-			$this->log()->debug(__('Product search result by external code from 1C.', 'wc1c'), ['product_ids' => $product_id]);
+			$this->log()->debug(__('Product search result by external code from 1C.', 'wc1c-main'), ['product_ids' => $product_id]);
 
 			if(is_array($product_id)) // todo: обработка нескольких?
 			{
-				$this->log()->notice(__('Several identical products were found. The first one is selected.', 'wc1c'), ['product_ids' => $product_id]);
+				$this->log()->notice(__('Several identical products were found. The first one is selected.', 'wc1c-main'), ['product_ids' => $product_id]);
 				$product_id = reset($product_id);
 			}
 		}
@@ -387,7 +387,7 @@ class Core extends SchemaAbstract
 		if(has_filter('wc1c_schema_productscleanercml_processing_products_search'))
 		{
 			$product_id = apply_filters('wc1c_schema_productscleanercml_processing_products_search', $product_id, $external_product, $this, $reader);
-			$this->log()->debug(__('Product search result by external algorithms.', 'wc1c'), ['product_ids' => $product_id]);
+			$this->log()->debug(__('Product search result by external algorithms.', 'wc1c-main'), ['product_ids' => $product_id]);
 		}
 
 		/**
@@ -395,7 +395,7 @@ class Core extends SchemaAbstract
 		 */
 		if(0 === $product_id)
 		{
-			$this->log()->info(__('Product is not found.', 'wc1c'));
+			$this->log()->info(__('Product is not found.', 'wc1c-main'));
 			return;
 		}
 
