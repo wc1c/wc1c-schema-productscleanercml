@@ -219,53 +219,48 @@ final class Receiver
 	/**
 	 * @return array
 	 */
-	public function getCredentialsByServer(): array
+    public function getCredentialsByServer(): array
     {
-		$credentials = [];
+        $credentials = ['login' => '', 'password' => ''];
 
-		if(!isset($_SERVER['PHP_AUTH_USER']))
-		{
-			if(isset($_SERVER['REMOTE_USER']))
-			{
-				$remote_user = sanitize_text_field($_SERVER['REMOTE_USER']);
+        if (!isset($_SERVER['PHP_AUTH_USER']))
+        {
+            $remote_user = '';
 
-				if(isset($_SERVER['REDIRECT_REMOTE_USER']))
-				{
-					$remote_user = sanitize_text_field($_SERVER['REMOTE_USER']) ?: sanitize_text_field($_SERVER['REDIRECT_REMOTE_USER']);
-				}
-			}
-			elseif(isset($_SERVER['REDIRECT_HTTP_AUTHORIZATION']))
-			{
-				$remote_user = sanitize_text_field($_SERVER['REDIRECT_HTTP_AUTHORIZATION']);
-			}
+            if (isset($_SERVER['REMOTE_USER'])) {
+                $remote_user = sanitize_text_field($_SERVER['REMOTE_USER']);
+            } elseif (isset($_SERVER['REDIRECT_REMOTE_USER'])) {
+                $remote_user = sanitize_text_field($_SERVER['REDIRECT_REMOTE_USER']);
+            } elseif (isset($_SERVER['REDIRECT_HTTP_AUTHORIZATION'])) {
+                $remote_user = sanitize_text_field($_SERVER['REDIRECT_HTTP_AUTHORIZATION']);
+            }
 
-			if(!isset($remote_user))
-			{
-				// todo: автоматическая запись необходимой записи в файл .htaccess с просьбой повторить выгрузку
-				$this->core()->log('schemas')->critical(esc_html__('Server in CGI mode. Not detected the presence of an entry in the root .htaccess file on the subject of the contents of the lines.', 'wc1c-main'), ['lines' => "RewriteEngine On:\nRewriteCond %{HTTP:Authorization} ^(.*)\nRewriteRule ^(.*) - [E=HTTP_AUTHORIZATION:%1]"]);
-				$this->core()->configuration()->setStatus('error');
-				$this->core()->configuration()->save();
-				$this->sendResponseByType('failure', esc_html__('Not specified the user. Check the server settings.', 'wc1c-main'));
-			}
+            if (empty($remote_user)) {
+                $this->core()->log('schemas')->critical(
+                    esc_html__('Server in CGI mode. Auth headers not detected.', 'wc1c-main'),
+                    ['lines' => "RewriteEngine On\nRewriteCond %{HTTP:Authorization} ^(.*)\nRewriteRule ^(.*) - [E=HTTP_AUTHORIZATION:%1]"]
+                );
+                $this->core()->configuration()->setStatus('error');
+                $this->core()->configuration()->save();
+                $this->sendResponseByType('failure', esc_html__('Not specified the user. Check the server settings.', 'wc1c-main'));
+            }
 
-			$str_tmp = base64_decode(substr($remote_user, 6));
+            $str_tmp = base64_decode(substr($remote_user, 6));
+            if ($str_tmp && strpos($str_tmp, ':') !== false)
+            {
+                list($user_login, $user_password) = explode(':', $str_tmp, 2);
+                $credentials['login'] = $user_login;
+                $credentials['password'] = (string) $user_password;
+            }
 
-			if($str_tmp)
-			{
-				list($user_login, $user_password) = explode(':', $str_tmp);
+            return $credentials;
+        }
 
-				$credentials['login'] = $user_login;
-				$credentials['password'] = $user_password;
-			}
+        $credentials['login'] = sanitize_text_field($_SERVER['PHP_AUTH_USER']);
+        $credentials['password'] = isset($_SERVER['PHP_AUTH_PW']) ? (string) $_SERVER['PHP_AUTH_PW'] : '';
 
-			return $credentials;
-		}
-
-		$credentials['login'] = sanitize_text_field($_SERVER['PHP_AUTH_USER']);
-		$credentials['password'] = sanitize_text_field($_SERVER['PHP_AUTH_PW']);
-
-		return $credentials;
-	}
+        return $credentials;
+    }
 
 	/**
 	 * Checkauth
