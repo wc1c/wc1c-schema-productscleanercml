@@ -595,7 +595,8 @@ final class Receiver
          * @param string $filename      Имя загружаемого файла
          * @param Core   $this->core()  Ядро схемы
          */
-        $allowed_mimes = apply_filters(
+        $allowed_mimes = apply_filters
+        (
             'wc1c_schema_productscleanercml_allowed_upload_mimes',
             $allowed_mimes,
             $filename,
@@ -644,9 +645,14 @@ final class Receiver
 
         $this->core()->log()->info(esc_html__('Saving data to a file named:', 'wc1c-main') . ' ' . $filename, ['file_path' => $upload_file_path]);
 
+        wc1c()->filesystem()->ensureDirectoryExists(dirname($upload_file_path));
+
         if(strpos($filename, 'import_files') !== false)
         {
-            wc1c()->filesystem()->ensureDirectoryExists(dirname($upload_file_path));
+            $response_description = esc_html__('The data is successfully delivery.', 'wc1c-main');
+
+            $this->core()->log()->info($response_description,);
+            $this->sendResponseByType('success', $response_description);
         }
 
         if(!wc1c()->filesystem()->isWritable($upload_directory))
