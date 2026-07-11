@@ -209,18 +209,48 @@ class Core extends SchemaAbstract
 			$reader = apply_filters('wc1c_schema_productscleanercml_file_processing_reader', $reader, $this);
 		}
 
-		while($reader->read())
-		{
-			try
-			{
-				do_action('wc1c_schema_productscleanercml_file_processing_read', $reader, $this);
-			}
-			catch(\Throwable $e)
-			{
-				$this->log()->error(esc_html__('Import file processing not completed. ReaderCML threw an exception.', 'wc1c-main'), ['exception' => $e]);
-				break;
-			}
-		}
+        wp_defer_term_counting(true);
+        wp_defer_comment_counting(true);
+
+        $this->log()->debug(esc_html__('Deferred term and comment counting enabled.', 'wc1c-main'));
+
+        $start_time = microtime(true);
+        $start_memory = memory_get_usage();
+        $processed_items = 0;
+
+        try
+        {
+            while($reader->read())
+            {
+                try
+                {
+                    do_action('wc1c_schema_productscleanercml_file_processing_read', $reader, $this);
+                    $processed_items++;
+                }
+                catch(\Throwable $e)
+                {
+                    $this->log()->error(esc_html__('Import file processing not completed. ReaderCML threw an exception.', 'wc1c-main'), ['exception' => $e]);
+                    break;
+                }
+            }
+        }
+        finally
+        {
+            wp_defer_term_counting(false);
+            wp_defer_comment_counting(false);
+
+            $end_time = microtime(true);
+            $end_memory = memory_get_peak_usage();
+
+            $this->log()->info(esc_html__('File processing completed.', 'wc1c-main'),
+            [
+                'duration' => round($end_time - $start_time, 2) . ' seconds',
+                'memory_used' => size_format($end_memory - $start_memory),
+                'memory_peak' => size_format($end_memory),
+                'processed_items' => $processed_items,
+                'success' => $reader->ready
+            ]);
+        }
 
 		return $reader->ready;
 	}
@@ -317,12 +347,26 @@ class Core extends SchemaAbstract
 
 		if($reader->nodeName === 'Каталог' && $reader->xml_reader->nodeType === XMLReader::ELEMENT)
 		{
-			$only_changes = $reader->xml_reader->getAttribute('СодержитТолькоИзменения') ?: true;
-			if($only_changes === 'false')
-			{
-				$only_changes = false;
-			}
+            $attr_value = $reader->xml_reader->getAttribute('СодержитТолькоИзменения');
+
+            $only_changes = true;
+
+            if ($attr_value !== null)
+            {
+                $attr_value = strtolower(trim($attr_value));
+
+                if (in_array($attr_value, ['false', '0', 'no', 'нет', ''], true)) {
+                    $only_changes = false;
+                } elseif (in_array($attr_value, ['true', '1', 'yes', 'да'], true)) {
+                    $only_changes = true;
+                } else {
+                    $this->log()->warning(__('Unknown value for attribute "СодержитТолькоИзменения".', 'wc1c-main'), ['value' => $attr_value]);
+                }
+            }
+
 			$reader->catalog->setOnlyChanges($only_changes);
+
+            $this->log()->debug(__('Catalog attribute "СодержитТолькоИзменения" processed.', 'wc1c-main'), ['only_changes' => $only_changes, 'original_value' => $attr_value]);
 		}
 
 		if($reader->parentNodeName === 'Каталог' && $reader->xml_reader->nodeType === XMLReader::ELEMENT)
@@ -353,7 +397,7 @@ class Core extends SchemaAbstract
 			/**
 			 * Декодирование данных продукта из XML в объект реализующий ProductDataContract
 			 */
-			$product = $reader->decoder->process('product', $reader->xml_reader->readOuterXml());
+			$product = $reader->decoder()->process('product', $reader->xml_reader->readOuterXml());
 
 			/**
 			 * Внешняя фильтрация перед непосредственной обработкой

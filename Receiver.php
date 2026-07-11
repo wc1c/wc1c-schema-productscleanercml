@@ -2,6 +2,7 @@
 
 defined('ABSPATH') || exit;
 
+use Wc1c\Main\Exceptions\RuntimeException;
 use Wc1c\Main\Traits\SingletonTrait;
 use Wc1c\Main\Traits\UtilityTrait;
 
@@ -227,19 +228,25 @@ final class Receiver
         {
             $remote_user = '';
 
-            if (isset($_SERVER['REMOTE_USER'])) {
+            if(isset($_SERVER['REMOTE_USER']))
+            {
                 $remote_user = sanitize_text_field($_SERVER['REMOTE_USER']);
-            } elseif (isset($_SERVER['REDIRECT_REMOTE_USER'])) {
+            }
+            elseif(isset($_SERVER['REDIRECT_REMOTE_USER']))
+            {
                 $remote_user = sanitize_text_field($_SERVER['REDIRECT_REMOTE_USER']);
-            } elseif (isset($_SERVER['REDIRECT_HTTP_AUTHORIZATION'])) {
+            }
+            elseif(isset($_SERVER['REDIRECT_HTTP_AUTHORIZATION']))
+            {
                 $remote_user = sanitize_text_field($_SERVER['REDIRECT_HTTP_AUTHORIZATION']);
             }
 
-            if (empty($remote_user)) {
-                $this->core()->log('schemas')->critical(
-                    esc_html__('Server in CGI mode. Auth headers not detected.', 'wc1c-main'),
+            if (empty($remote_user))
+            {
+                $this->core()->log('schemas')->critical(esc_html__('Server in CGI mode. Auth headers not detected.', 'wc1c-main'),
                     ['lines' => "RewriteEngine On\nRewriteCond %{HTTP:Authorization} ^(.*)\nRewriteRule ^(.*) - [E=HTTP_AUTHORIZATION:%1]"]
                 );
+
                 $this->core()->configuration()->setStatus('error');
                 $this->core()->configuration()->save();
                 $this->sendResponseByType('failure', esc_html__('Not specified the user. Check the server settings.', 'wc1c-main'));
@@ -249,8 +256,10 @@ final class Receiver
             if ($str_tmp && strpos($str_tmp, ':') !== false)
             {
                 list($user_login, $user_password) = explode(':', $str_tmp, 2);
-                $credentials['login'] = $user_login;
+                $credentials['login'] = trim($user_login);
                 $credentials['password'] = (string) $user_password;
+
+                $this->core()->log()->debug(esc_html__('Credentials extracted from CGI headers.', 'wc1c-main'), ['login' => $credentials['login'], 'password_length' => strlen($credentials['password'])]);
             }
 
             return $credentials;
@@ -258,6 +267,8 @@ final class Receiver
 
         $credentials['login'] = sanitize_text_field($_SERVER['PHP_AUTH_USER']);
         $credentials['password'] = isset($_SERVER['PHP_AUTH_PW']) ? (string) $_SERVER['PHP_AUTH_PW'] : '';
+
+        $this->core()->log()->debug(esc_html__('Credentials extracted from PHP_AUTH headers.', 'wc1c-main'), ['login' => $credentials['login'], 'password_length' => strlen($credentials['password'])]);
 
         return $credentials;
     }
@@ -275,20 +286,23 @@ final class Receiver
 			$validator = apply_filters('wc1c_schema_productscleanercml_handler_checkauth_validate', $credentials);
 		}
 
-		if(true !== $validator)
-		{
-			if($credentials['login'] !== $this->core()->getOptions('user_login', ''))
-			{
-				$this->core()->log()->notice(esc_html__('Not a valid username.', 'wc1c-main'));
-				$this->sendResponseByType('failure', esc_html__('Not a valid username.', 'wc1c-main'));
-			}
+        if(true !== $validator)
+        {
+            $stored_login = (string) $this->core()->getOptions('user_login', '');
+            $stored_password = (string) $this->core()->getOptions('user_password', '');
 
-			if($credentials['password'] !== $this->core()->getOptions('user_password', ''))
-			{
-				$this->core()->log()->notice(esc_html__('Not a valid user password.', 'wc1c-main'));
-				$this->sendResponseByType('failure', esc_html__('Not a valid user password.', 'wc1c-main'));
-			}
-		}
+            if (!hash_equals($stored_login, $credentials['login']))
+            {
+                $this->core()->log()->notice(esc_html__('Not a valid username.', 'wc1c-main'));
+                $this->sendResponseByType('failure', esc_html__('Not a valid username.', 'wc1c-main'));
+            }
+
+            if (!hash_equals($stored_password, $credentials['password']))
+            {
+                $this->core()->log()->notice(esc_html__('Not a valid user password.', 'wc1c-main'));
+                $this->sendResponseByType('failure', esc_html__('Not a valid user password.', 'wc1c-main'));
+            }
+        }
 
 		$lines = [];
 
@@ -531,8 +545,25 @@ final class Receiver
 			$this->sendResponseByType('failure', $response_description);
 		}
 
-        if (strpos($filename, '..') !== false) {
-            $this->sendResponseByType('failure', esc_html__('Invalid filename: directory traversal detected.', 'wc1c-main'));
+        if(strlen($filename) > 255)
+        {
+            $this->core()->log()->error(esc_html__('Filename is too long.', 'wc1c-main'), ['length' => strlen($filename)]);
+            $this->sendResponseByType('failure', esc_html__('Filename is too long.', 'wc1c-main'));
+        }
+
+        if (strpos($filename, '..') !== false ||
+            strpos($filename, './') !== false ||
+            strpos($filename, '/.') !== false ||
+            strpos($filename, '\\') !== false)
+        {
+            $this->core()->log()->error(esc_html__('Invalid filename: directory traversal detected.', 'wc1c-main'), ['filename' => $filename]);
+            $this->sendResponseByType('failure', __('Invalid filename.', 'wc1c-main'));
+        }
+
+        if (in_array(strtolower($filename), ['.htaccess', '.htpasswd', 'web.config', 'php.ini'], true))
+        {
+            $this->core()->log()->error(esc_html__('Forbidden filename.', 'wc1c-main'), ['filename' => $filename]);
+            $this->sendResponseByType('failure', esc_html__('Forbidden filename.', 'wc1c-main'));
         }
 
 		$upload_file_path = wp_normalize_path($upload_directory . $filename);
@@ -552,19 +583,17 @@ final class Receiver
 			$this->sendResponseByType('failure', $response_description);
 		}
 
-		$file_data = false;
-		if(function_exists('file_get_contents'))
-		{
-			$file_data = file_get_contents('php://input');
-		}
+        try
+        {
+            $file_data = wc1c()->filesystem()->get('php://input');
+        }
+        catch (\RuntimeException $exception)
+        {
+            $response_description = esc_html__('The request contains no data to write to the file. Retry the upload.', 'wc1c-main');
 
-		if(false === $file_data)
-		{
-			$response_description = esc_html__('The request contains no data to write to the file. Retry the upload.', 'wc1c-main');
-
-			$this->core()->log()->error($response_description);
-			$this->sendResponseByType('failure', $response_description);
-		}
+            $this->core()->log()->error($response_description);
+            $this->sendResponseByType('failure', $response_description);
+        }
 
 		if(wc1c()->filesystem()->exists($upload_file_path))
 		{
@@ -575,6 +604,7 @@ final class Receiver
 		if($fp = fopen($upload_file_path, "ab"))
 		{
 			$file_size = fwrite($fp, $file_data);
+            fclose($fp);
 		}
 
 		if($file_size)
@@ -585,7 +615,6 @@ final class Receiver
 
 			$this->core()->log()->info($response_description, ['file_size' => $file_size]);
 			$this->sendResponseByType('success', $response_description);
-			return;
 		}
 
 		$response_description = esc_html__('Failed to write data to file.', 'wc1c-main');
