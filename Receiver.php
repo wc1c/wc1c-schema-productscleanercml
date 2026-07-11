@@ -566,6 +566,87 @@ final class Receiver
             $this->sendResponseByType('failure', esc_html__('Forbidden filename.', 'wc1c-main'));
         }
 
+        /**
+         * Проверка расширения файла
+         * Разрешены все расширения из медиабиблиотеки WordPress + CommerceML-специфичные
+         */
+        $extension = wc1c()->filesystem()->extension($filename);
+
+        if (empty($extension))
+        {
+            $this->core()->log()->error(esc_html__('File has no extension.', 'wc1c-main'), ['filename' => $filename]);
+            $this->sendResponseByType('failure', esc_html__('File has no extension.', 'wc1c-main'));
+        }
+
+        // Получаем разрешенные MIME-типы WordPress (те же, что в медиабиблиотеке)
+        $allowed_mimes = get_allowed_mime_types();
+
+        // CommerceML-специфичные расширения, которые могут отсутствовать в WordPress
+        $cml_mimes = [
+            'xml'  => 'text/xml',
+            'cml'  => 'text/xml',
+            'zip'  => 'application/zip',
+            'gz'   => 'application/gzip',
+        ];
+
+        // Объединяем: WordPress MIME + CommerceML MIME
+        $allowed_mimes = array_merge($cml_mimes, $allowed_mimes);
+
+        /**
+         * Фильтр разрешенных MIME-типов для загрузки файлов через CommerceML
+         *
+         * Позволяет сторонним плагинам расширять список разрешенных расширений.
+         *
+         * @param array  $allowed_mimes Массив разрешенных MIME-типов [расширение => mime-type]
+         * @param string $filename      Имя загружаемого файла
+         * @param Core   $this->core()  Ядро схемы
+         */
+        $allowed_mimes = apply_filters(
+            'wc1c_schema_productscleanercml_allowed_upload_mimes',
+            $allowed_mimes,
+            $filename,
+            $this->core()
+        );
+
+        // Проверяем, разрешено ли расширение загружаемого файла
+        $is_allowed = false;
+        $matched_mime = '';
+
+        foreach ($allowed_mimes as $extensions => $mime)
+        {
+            // Ключ может содержать несколько расширений через | (например, 'jpg|jpeg|jpe')
+            $exts = array_map('trim', explode('|', $extensions));
+            if (in_array($extension, $exts, true)) {
+                $is_allowed = true;
+                $matched_mime = $mime;
+                break;
+            }
+        }
+
+        if (!$is_allowed)
+        {
+            $this->core()->log()->error
+            (
+                esc_html__('Invalid file extension. This type of file is not allowed for upload.', 'wc1c-main'),
+                [
+                    'filename'        => $filename,
+                    'extension'       => $extension,
+                    'allowed_count'   => count($allowed_mimes),
+                ]
+            );
+            $this->sendResponseByType('failure', esc_html__('Invalid file extension. This type of file is not allowed for upload.', 'wc1c-main'));
+        }
+
+        $this->core()->log()->debug
+        (
+            esc_html__('File extension is allowed.', 'wc1c-main'),
+            [
+                'filename'  => $filename,
+                'extension' => $extension,
+                'mime_type' => $matched_mime,
+            ]
+        );
+
 		$upload_file_path = wp_normalize_path($upload_directory . $filename);
 
 		$this->core()->log()->info(esc_html__('Saving data to a file named:', 'wc1c-main') . ' ' . $filename, ['file_path' => $upload_file_path]);
