@@ -509,41 +509,41 @@ final class Receiver
 	 *
 	 * @return void
      */
-	public function handlerCatalogModeFile()
-	{
-		$upload_directory = $this->core()->getUploadDirectory() . DIRECTORY_SEPARATOR;
+    public function handlerCatalogModeFile()
+    {
+        $upload_directory = $this->core()->getUploadDirectory() . DIRECTORY_SEPARATOR;
 
-		if(has_filter('wc1c_schema_productscleanercml_handler_catalog_mode_file_directory'))
-		{
-			$upload_directory = apply_filters('wc1c_schema_productscleanercml_handler_catalog_mode_file_directory', $upload_directory);
-		}
+        if(has_filter('wc1c_schema_productscleanercml_handler_catalog_mode_file_directory'))
+        {
+            $upload_directory = apply_filters('wc1c_schema_productscleanercml_handler_catalog_mode_file_directory', $upload_directory);
+        }
 
-		$upload_directory = wp_normalize_path($upload_directory);
+        $upload_directory = wp_normalize_path($upload_directory);
 
-		wc1c()->filesystem()->ensureDirectoryExists($upload_directory);
+        wc1c()->filesystem()->ensureDirectoryExists($upload_directory);
 
-		if(!wc1c()->filesystem()->exists($upload_directory))
-		{
-			$response_description = esc_html__('Directory is unavailable:', 'wc1c-main') . ' ' . $upload_directory;
+        if(!wc1c()->filesystem()->exists($upload_directory))
+        {
+            $response_description = esc_html__('Directory is unavailable:', 'wc1c-main') . ' ' . $upload_directory;
 
-			$this->core()->log()->error($response_description, ['directory' => $upload_directory]);
-			$this->sendResponseByType('failure', $response_description);
-		}
+            $this->core()->log()->error($response_description, ['directory' => $upload_directory]);
+            $this->sendResponseByType('failure', $response_description);
+        }
 
-		$filename = wc1c()->getVar($_GET['filename'], '');
+        $filename = wc1c()->getVar($_GET['filename'], '');
 
-		if(has_filter('wc1c_schema_productscleanercml_handler_catalog_mode_file_filename'))
-		{
-			$filename = apply_filters('wc1c_schema_productscleanercml_handler_catalog_mode_file_filename', $filename);
-		}
+        if(has_filter('wc1c_schema_productscleanercml_handler_catalog_mode_file_filename'))
+        {
+            $filename = apply_filters('wc1c_schema_productscleanercml_handler_catalog_mode_file_filename', $filename);
+        }
 
-		if(empty($filename))
-		{
-			$response_description = esc_html__('Filename is empty.', 'wc1c-main');
+        if(empty($filename))
+        {
+            $response_description = esc_html__('Filename is empty.', 'wc1c-main');
 
             $this->core()->log()->error($response_description);
-			$this->sendResponseByType('failure', $response_description);
-		}
+            $this->sendResponseByType('failure', $response_description);
+        }
 
         if(strlen($filename) > 255)
         {
@@ -566,10 +566,6 @@ final class Receiver
             $this->sendResponseByType('failure', esc_html__('Forbidden filename.', 'wc1c-main'));
         }
 
-        /**
-         * Проверка расширения файла
-         * Разрешены все расширения из медиабиблиотеки WordPress + CommerceML-специфичные
-         */
         $extension = wc1c()->filesystem()->extension($filename);
 
         if (empty($extension))
@@ -578,18 +574,16 @@ final class Receiver
             $this->sendResponseByType('failure', esc_html__('File has no extension.', 'wc1c-main'));
         }
 
-        // Получаем разрешенные MIME-типы WordPress (те же, что в медиабиблиотеке)
         $allowed_mimes = get_allowed_mime_types();
-
-        // CommerceML-специфичные расширения, которые могут отсутствовать в WordPress
-        $cml_mimes = [
+        $cml_mimes =
+        [
             'xml'  => 'text/xml',
             'cml'  => 'text/xml',
             'zip'  => 'application/zip',
             'gz'   => 'application/gzip',
         ];
 
-        // Объединяем: WordPress MIME + CommerceML MIME
+        // WordPress MIME + CommerceML MIME
         $allowed_mimes = array_merge($cml_mimes, $allowed_mimes);
 
         /**
@@ -608,7 +602,6 @@ final class Receiver
             $this->core()
         );
 
-        // Проверяем, разрешено ли расширение загружаемого файла
         $is_allowed = false;
         $matched_mime = '';
 
@@ -647,62 +640,111 @@ final class Receiver
             ]
         );
 
-		$upload_file_path = wp_normalize_path($upload_directory . $filename);
+        $upload_file_path = wp_normalize_path($upload_directory . $filename);
 
-		$this->core()->log()->info(esc_html__('Saving data to a file named:', 'wc1c-main') . ' ' . $filename, ['file_path' => $upload_file_path]);
+        $this->core()->log()->info(esc_html__('Saving data to a file named:', 'wc1c-main') . ' ' . $filename, ['file_path' => $upload_file_path]);
 
-		if(strpos($filename, 'import_files') !== false)
-		{
-			wc1c()->filesystem()->ensureDirectoryExists(dirname($upload_file_path));
-		}
-
-		if(!wc1c()->filesystem()->isWritable($upload_directory))
-		{
-			$response_description = esc_html__('Directory is unavailable for write.', 'wc1c-main');
-
-			$this->core()->log()->error($response_description, ['directory' => $upload_directory]);
-			$this->sendResponseByType('failure', $response_description);
-		}
-
-        try
+        if(strpos($filename, 'import_files') !== false)
         {
-            $file_data = wc1c()->filesystem()->get('php://input');
+            wc1c()->filesystem()->ensureDirectoryExists(dirname($upload_file_path));
         }
-        catch (\RuntimeException $exception)
-        {
-            $response_description = esc_html__('The request contains no data to write to the file. Retry the upload.', 'wc1c-main');
 
+        if(!wc1c()->filesystem()->isWritable($upload_directory))
+        {
+            $response_description = esc_html__('Directory is unavailable for write.', 'wc1c-main');
+            $this->core()->log()->error($response_description, ['directory' => $upload_directory]);
+            $this->sendResponseByType('failure', $response_description);
+        }
+
+        // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen
+        $input_stream = fopen('php://input', 'rb');
+
+        if(!$input_stream)
+        {
+            $response_description = esc_html__('Failed to open input stream. The request contains no data to write to the file.', 'wc1c-main');
             $this->core()->log()->error($response_description);
             $this->sendResponseByType('failure', $response_description);
         }
 
-		if(wc1c()->filesystem()->exists($upload_file_path))
-		{
-			$this->core()->log()->info(esc_html__('The file exists. Write a data to the end of an existing file.', 'wc1c-main'));
-		}
+        $file_mode = wc1c()->filesystem()->exists($upload_file_path) ? 'ab' : 'wb';
 
-		$file_size = false;
-		if($fp = fopen($upload_file_path, "ab"))
-		{
-			$file_size = fwrite($fp, $file_data);
-            fclose($fp);
-		}
+        if(wc1c()->filesystem()->exists($upload_file_path))
+        {
+            $this->core()->log()->info(esc_html__('The file exists. Write a data to the end of an existing file.', 'wc1c-main'));
+        }
 
-		if($file_size)
-		{
-			wc1c()->filesystem()->chmod($upload_file_path , 0755);
+        // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen
+        $output_stream = fopen($upload_file_path, $file_mode);
 
-			$response_description = esc_html__('The data is successfully written to a file. Recorded data size:', 'wc1c-main') . ' '. size_format($file_size);
+        if(!$output_stream)
+        {
+            // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
+            fclose($input_stream);
 
-			$this->core()->log()->info($response_description, ['file_size' => $file_size]);
-			$this->sendResponseByType('success', $response_description);
-		}
+            $response_description = esc_html__('Failed to open output file for writing.', 'wc1c-main');
+            $this->core()->log()->error($response_description, ['file_path' => $upload_file_path]);
+            $this->sendResponseByType('failure', $response_description);
+        }
 
-		$response_description = esc_html__('Failed to write data to file.', 'wc1c-main');
+        $chunk_size = 8192; // 8 KB
+        $total_size = 0;
+        $chunks_count = 0;
 
-		$this->core()->log()->error($response_description, ['file_path' => $upload_file_path]);
-		$this->sendResponseByType('failure', $response_description);
-	}
+        // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_feof
+        while(!feof($input_stream))
+        {
+            // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fread
+            $chunk = fread($input_stream, $chunk_size);
+
+            if($chunk === false)
+            {
+                break;
+            }
+
+            // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fwrite
+            $written = fwrite($output_stream, $chunk);
+
+            if($written === false)
+            {
+                // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
+                fclose($input_stream);
+                // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
+                fclose($output_stream);
+
+                $response_description = esc_html__('Failed to write data to file.', 'wc1c-main');
+                $this->core()->log()->error($response_description, ['file_path' => $upload_file_path]);
+                $this->sendResponseByType('failure', $response_description);
+            }
+
+            $total_size += $written;
+            $chunks_count++;
+        }
+
+        // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
+        fclose($input_stream);
+        // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
+        fclose($output_stream);
+
+        if($total_size === 0)
+        {
+            $response_description = esc_html__('The request contains no data to write to the file. Retry the upload.', 'wc1c-main');
+            $this->core()->log()->error($response_description);
+            $this->sendResponseByType('failure', $response_description);
+        }
+
+        wc1c()->filesystem()->chmod($upload_file_path, 0755);
+
+        $response_description = esc_html__('The data is successfully written to a file. Recorded data size:', 'wc1c-main') . ' ' . size_format($total_size);
+
+        $this->core()->log()->info($response_description,
+        [
+            'file_size' => $total_size,
+            'chunks_count' => $chunks_count,
+            'memory_peak' => size_format(memory_get_peak_usage())
+        ]);
+
+        $this->sendResponseByType('success', $response_description);
+    }
 
 	/**
 	 * Catalog import
