@@ -468,6 +468,45 @@ final class Receiver
 
 		$this->core()->log()->debug(esc_html__('Session for receiving requests.', 'wc1c-main'), ['session'=> $_SESSION]);
 
+        $directory = $this->core()->getUploadDirectory();
+
+        $this->core()->log()->info(esc_html__('Check the directory for temporary files.', 'wc1c-main'), ['directory' => $directory]);
+
+        wc1c()->filesystem()->ensureDirectoryExists($directory);
+
+        if(!wc1c()->filesystem()->isDirectory($directory))
+        {
+            $error = esc_html__('Failed to check the temp directory.', 'wc1c-main');
+
+            $this->core()->log()->error($error, ['directory' => $directory]);
+
+            $this->sendResponseByType('failure', $error);
+        }
+        else
+        {
+            $ht_name = $directory . '/.htaccess';
+            if(!file_exists($ht_name))
+            {
+                $htaccess_content = "Options -Indexes\n" .
+                    "<IfModule mod_authz_core.c>\n" .
+                    "    Require all denied\n" .
+                    "</IfModule>\n" .
+                    "<IfModule !mod_authz_core.c>\n" .
+                    "    Deny from all\n" .
+                    "</IfModule>\n";
+
+                // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen
+                $fp = fopen($ht_name, 'wb');
+                if($fp)
+                {
+                    // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fwrite
+                    fwrite($fp, $htaccess_content);
+                    // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
+                    fclose($fp);
+                }
+            }
+        }
+
 		$data['zip'] = 'zip=no' . PHP_EOL;
 
 		$max_size = $this->utilityConvertFileSize(wc1c()->environment()->get('php_post_max_size'));
@@ -664,10 +703,10 @@ final class Receiver
 
         // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen
         $input_stream = fopen('php://input', 'rb');
-
         if(!$input_stream)
         {
             $response_description = esc_html__('Failed to open input stream. The request contains no data to write to the file.', 'wc1c-main');
+
             $this->core()->log()->error($response_description);
             $this->sendResponseByType('failure', $response_description);
         }
@@ -681,13 +720,13 @@ final class Receiver
 
         // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen
         $output_stream = fopen($upload_file_path, $file_mode);
-
         if(!$output_stream)
         {
             // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
             fclose($input_stream);
 
             $response_description = esc_html__('Failed to open output file for writing.', 'wc1c-main');
+
             $this->core()->log()->error($response_description, ['file_path' => $upload_file_path]);
             $this->sendResponseByType('failure', $response_description);
         }
@@ -701,7 +740,6 @@ final class Receiver
         {
             // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fread
             $chunk = fread($input_stream, $chunk_size);
-
             if($chunk === false)
             {
                 break;
@@ -709,7 +747,6 @@ final class Receiver
 
             // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fwrite
             $written = fwrite($output_stream, $chunk);
-
             if($written === false)
             {
                 // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
@@ -718,6 +755,7 @@ final class Receiver
                 fclose($output_stream);
 
                 $response_description = esc_html__('Failed to write data to file.', 'wc1c-main');
+
                 $this->core()->log()->error($response_description, ['file_path' => $upload_file_path]);
                 $this->sendResponseByType('failure', $response_description);
             }
@@ -734,6 +772,7 @@ final class Receiver
         if($total_size === 0)
         {
             $response_description = esc_html__('The request contains no data to write to the file. Retry the upload.', 'wc1c-main');
+
             $this->core()->log()->error($response_description);
             $this->sendResponseByType('failure', $response_description);
         }
