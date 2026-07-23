@@ -42,8 +42,8 @@ class Core extends SchemaAbstract
 		$this->setId('productscleanercml');
 		$this->setVersion('0.5.1');
 
-		$this->setName(esc_html__('Cleaning of products via CommerceML', 'wc1c-main'));
-		$this->setDescription(esc_html__('Cleaning of existing products in WooCommerce according to the nomenclature from 1C via the CommerceML protocol.', 'wc1c-main'));
+		$this->setName(esc_html__('Cleaning of products via CommerceML', 'wc1c-maincore'));
+		$this->setDescription(esc_html__('Cleaning of existing products in WooCommerce according to the nomenclature from 1C via the CommerceML protocol.', 'wc1c-maincore'));
 	}
 
 	/**
@@ -111,7 +111,7 @@ class Core extends SchemaAbstract
     {
         if($this->configuration()->isEnabled() === false)
         {
-            $message = esc_html__('Configuration is offline.', 'wc1c-main');
+            $message = esc_html__('Configuration is offline.', 'wc1c-maincore');
 
             wc1c()->log('receiver')->warning($message);
             $this->receiver->sendResponseByType('failure', $message);
@@ -124,7 +124,7 @@ class Core extends SchemaAbstract
         }
         catch(\Throwable $e)
         {
-            $message = esc_html__('Error saving configuration.', 'wc1c-main');
+            $message = esc_html__('Error saving configuration.', 'wc1c-maincore');
 
             wc1c()->log('receiver')->error($message, ['exception' => $e]);
             $this->receiver->sendResponseByType('failure', $message);
@@ -145,7 +145,7 @@ class Core extends SchemaAbstract
 
         if(false === $action)
         {
-            $message = esc_html__('Receiver request is very bad! Action not found.', 'wc1c-main');
+            $message = esc_html__('Receiver request is very bad! Action not found.', 'wc1c-maincore');
 
             wc1c()->log('receiver')->warning($message, ['action' => $wc1c_receiver_action]);
             $this->receiver->sendResponseByType('failure', $message);
@@ -183,7 +183,7 @@ class Core extends SchemaAbstract
 		}
 		catch(\Throwable $exception)
 		{
-			$this->log()->error(esc_html__('The file cannot be processed. DecoderCML threw an exception.', 'wc1c-main'), ['exception' => $exception]);
+			$this->log()->error(esc_html__('The file cannot be processed. DecoderCML threw an exception.', 'wc1c-maincore'), ['exception' => $exception]);
 			return false;
 		}
 
@@ -198,11 +198,11 @@ class Core extends SchemaAbstract
 		}
 		catch(\Throwable $exception)
 		{
-			$this->log()->error(esc_html__('The file cannot be processed. ReaderCML threw an exception.', 'wc1c-main'), ['exception' => $exception]);
+			$this->log()->error(esc_html__('The file cannot be processed. ReaderCML threw an exception.', 'wc1c-maincore'), ['exception' => $exception]);
 			return false;
 		}
 
-		$this->log()->debug(esc_html__('Filetype:', 'wc1c-main') . ' ' . $reader->getFiletype(), ['filetype' => $reader->getFiletype()]);
+		$this->log()->debug(esc_html__('Filetype:', 'wc1c-maincore') . ' ' . $reader->getFiletype(), ['filetype' => $reader->getFiletype()]);
 
 		if(has_filter('wc1c_schema_productscleanercml_file_processing_reader'))
 		{
@@ -212,7 +212,7 @@ class Core extends SchemaAbstract
         wp_defer_term_counting(true);
         wp_defer_comment_counting(true);
 
-        $this->log()->debug(esc_html__('Deferred term and comment counting enabled.', 'wc1c-main'));
+        $this->log()->debug(esc_html__('Deferred term and comment counting enabled.', 'wc1c-maincore'));
 
         $start_time = microtime(true);
         $start_memory = memory_get_usage();
@@ -229,7 +229,7 @@ class Core extends SchemaAbstract
                 }
                 catch(\Throwable $e)
                 {
-                    $this->log()->error(esc_html__('Import file processing not completed. ReaderCML threw an exception.', 'wc1c-main'), ['exception' => $e]);
+                    $this->log()->error(esc_html__('Import file processing not completed. ReaderCML threw an exception.', 'wc1c-maincore'), ['exception' => $e]);
                     break;
                 }
             }
@@ -242,7 +242,7 @@ class Core extends SchemaAbstract
             $end_time = microtime(true);
             $end_memory = memory_get_peak_usage();
 
-            $this->log()->info(esc_html__('File processing completed.', 'wc1c-main'),
+            $this->log()->info(esc_html__('File processing completed.', 'wc1c-maincore'),
             [
                 'duration' => round($end_time - $start_time, 2) . ' seconds',
                 'memory_used' => size_format($end_memory - $start_memory),
@@ -267,7 +267,7 @@ class Core extends SchemaAbstract
 	{
 		if(wc1c()->timer()->getMaximum() !== 0 && !wc1c()->timer()->isRemainingBiggerThan(5))
 		{
-			throw new Exception(esc_html__('There was not enough time to load all the data.', 'wc1c-main'));
+			throw new Exception(esc_html__('There was not enough time to load all the data.', 'wc1c-maincore'));
 		}
 	}
 
@@ -306,7 +306,7 @@ class Core extends SchemaAbstract
 
 			if(!$classifier instanceof ClassifierDataContract)
 			{
-				$this->log()->debug(esc_html__('Classifier !instanceof ClassifierDataContract. Skip processing.', 'wc1c-main'), ['data' => $classifier]);
+				$this->log()->debug(esc_html__('Classifier !instanceof ClassifierDataContract. Skip processing.', 'wc1c-maincore'), ['data' => $classifier]);
 				return;
 			}
 
@@ -318,7 +318,7 @@ class Core extends SchemaAbstract
 			}
 			catch(\Throwable $e)
 			{
-				$this->log()->warning(esc_html__('An exception was thrown while saving the classifier.', 'wc1c-main'), ['exception' => $e]);
+				$this->log()->warning(esc_html__('An exception was thrown while saving the classifier.', 'wc1c-maincore'), ['exception' => $e]);
 			}
 
 			$reader->next();
@@ -360,13 +360,13 @@ class Core extends SchemaAbstract
                 } elseif (in_array($attr_value, ['true', '1', 'yes', 'да'], true)) {
                     $only_changes = true;
                 } else {
-                    $this->log()->warning(__('Unknown value for attribute "СодержитТолькоИзменения".', 'wc1c-main'), ['value' => $attr_value]);
+                    $this->log()->warning(__('Unknown value for attribute "СодержитТолькоИзменения".', 'wc1c-maincore'), ['value' => $attr_value]);
                 }
             }
 
 			$reader->catalog->setOnlyChanges($only_changes);
 
-            $this->log()->debug(__('Catalog attribute "СодержитТолькоИзменения" processed.', 'wc1c-main'), ['only_changes' => $only_changes, 'original_value' => $attr_value]);
+            $this->log()->debug(__('Catalog attribute "СодержитТолькоИзменения" processed.', 'wc1c-maincore'), ['only_changes' => $only_changes, 'original_value' => $attr_value]);
 		}
 
 		if($reader->parentNodeName === 'Каталог' && $reader->xml_reader->nodeType === XMLReader::ELEMENT)
@@ -413,7 +413,7 @@ class Core extends SchemaAbstract
 
 			if(!$product instanceof ProductDataContract)
 			{
-				$this->log()->debug(esc_html__('Product !instanceof ProductDataContract. Skip processing.', 'wc1c-main'), ['data' => $product]);
+				$this->log()->debug(esc_html__('Product !instanceof ProductDataContract. Skip processing.', 'wc1c-maincore'), ['data' => $product]);
 				return;
 			}
 
@@ -423,7 +423,7 @@ class Core extends SchemaAbstract
 			}
 			catch(\Throwable $e)
 			{
-				$this->log()->warning(esc_html__('An exception was thrown while saving the product.', 'wc1c-main'), ['exception' => $e]);
+				$this->log()->warning(esc_html__('An exception was thrown while saving the product.', 'wc1c-maincore'), ['exception' => $e]);
 			}
 
 			$reader->next();
@@ -441,11 +441,11 @@ class Core extends SchemaAbstract
 	 */
 	public function processingProductsItem(ProductDataContract $external_product, Reader $reader)
 	{
-		$this->log()->info(esc_html__('Processing a product from a catalog of products.', 'wc1c-main'), ['product_id' => $external_product->getId(), 'product_characteristic_id' => $external_product->getCharacteristicId()]);
+		$this->log()->info(esc_html__('Processing a product from a catalog of products.', 'wc1c-maincore'), ['product_id' => $external_product->getId(), 'product_characteristic_id' => $external_product->getCharacteristicId()]);
 
 		if('yes' !== $this->getOptions('clean', 'no'))
 		{
-			$this->log()->info(esc_html__('Cleaning of products is disabled. Processing skipped.', 'wc1c-main'), ['product_id' => $external_product->getId(), 'product_characteristic_id' => $external_product->getCharacteristicId()]);
+			$this->log()->info(esc_html__('Cleaning of products is disabled. Processing skipped.', 'wc1c-maincore'), ['product_id' => $external_product->getId(), 'product_characteristic_id' => $external_product->getCharacteristicId()]);
 			return;
 		}
 
@@ -459,11 +459,11 @@ class Core extends SchemaAbstract
 		{
 			$product_id = $product_factory->findIdsByExternalIdAndCharacteristicId($external_product->getId(), $external_product->getCharacteristicId());
 
-			$this->log()->debug(esc_html__('Product search result by external code from 1C.', 'wc1c-main'), ['product_ids' => $product_id]);
+			$this->log()->debug(esc_html__('Product search result by external code from 1C.', 'wc1c-maincore'), ['product_ids' => $product_id]);
 
 			if(is_array($product_id)) // todo: обработка нескольких?
 			{
-				$this->log()->notice(esc_html__('Several identical products were found. The first one is selected.', 'wc1c-main'), ['product_ids' => $product_id]);
+				$this->log()->notice(esc_html__('Several identical products were found. The first one is selected.', 'wc1c-maincore'), ['product_ids' => $product_id]);
 				$product_id = reset($product_id);
 			}
 		}
@@ -481,7 +481,7 @@ class Core extends SchemaAbstract
 		if(empty($product_id) && has_filter('wc1c_schema_productscleanercml_processing_products_search'))
 		{
 			$product_id = apply_filters('wc1c_schema_productscleanercml_processing_products_search', $product_id, $external_product, $this, $reader);
-			$this->log()->debug(esc_html__('Product search result by external algorithms.', 'wc1c-main'), ['product_ids' => $product_id]);
+			$this->log()->debug(esc_html__('Product search result by external algorithms.', 'wc1c-maincore'), ['product_ids' => $product_id]);
 		}
 
 		/**
@@ -489,7 +489,7 @@ class Core extends SchemaAbstract
 		 */
 		if(empty($product_id))
 		{
-			$this->log()->info(esc_html__('Product is not found.', 'wc1c-main'));
+			$this->log()->info(esc_html__('Product is not found.', 'wc1c-maincore'));
 			return;
 		}
 

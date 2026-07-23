@@ -61,9 +61,9 @@ class Admin
 	{
 		$fields['title_receiver'] =
 		[
-			'title' => __('Receiving requests from 1C', 'wc1c-main'),
+			'title' => __('Receiving requests from 1C', 'wc1c-maincore'),
 			'type' => 'title',
-			'description' => __('Authorization of requests and regulation of algorithms for receiving requests for the Receiver from the 1C programs by CommerceML protocol.', 'wc1c-main'),
+			'description' => __('Authorization of requests and regulation of algorithms for receiving requests for the Receiver from the 1C programs by CommerceML protocol.', 'wc1c-maincore'),
 		];
 
 		$lazy_sign = $this->core()->configuration()->getMeta('receiver_lazy_sign');
@@ -80,24 +80,24 @@ class Admin
 
 		$fields['url_requests'] =
 		[
-			'title' => __('Website address', 'wc1c-main'),
+			'title' => __('Website address', 'wc1c-maincore'),
 			'type' => 'raw',
 			'raw' => $url_raw,
 			'description' => sprintf(
 				'%s<hr>%s',
-				__('Specified in the exchange settings on the 1C side. The Recipient is located at this address, which will receive requests from 1C.', 'wc1c-main'),
-				__('When copying, you need to get rid of whitespace characters, if they are present.', 'wc1c-main')
+				__('Specified in the exchange settings on the 1C side. The Recipient is located at this address, which will receive requests from 1C.', 'wc1c-maincore'),
+				__('When copying, you need to get rid of whitespace characters, if they are present.', 'wc1c-maincore')
 			)
 		];
 
 		$fields['user_login'] =
 		[
-			'title' => __('Username', 'wc1c-main'),
+			'title' => __('Username', 'wc1c-maincore'),
 			'type' => 'text',
 			'description' => sprintf(
 				'%s<hr>%s',
-				__('Specified when setting up an exchange with a site on the 1C side. Any name can be specified, except for an empty value.', 'wc1c-main'),
-				__('Work with data on the site is performed on behalf of the configuration owner, and not on behalf of the specified username.', 'wc1c-main')
+				__('Specified when setting up an exchange with a site on the 1C side. Any name can be specified, except for an empty value.', 'wc1c-maincore'),
+				__('Work with data on the site is performed on behalf of the configuration owner, and not on behalf of the specified username.', 'wc1c-maincore')
 			),
 			'default' => '',
 			'css' => 'min-width: 377px;',
@@ -105,9 +105,9 @@ class Admin
 
 		$fields['user_password'] =
 		[
-			'title' => __('User password', 'wc1c-main'),
+			'title' => __('User password', 'wc1c-maincore'),
 			'type' => 'password',
-			'description' => __('Specified in pair with the username when setting up on the 1C side. It is advisable not to specify a password for the current WordPress user.', 'wc1c-main'),
+			'description' => __('Specified in pair with the username when setting up on the 1C side. It is advisable not to specify a password for the current WordPress user.', 'wc1c-maincore'),
 			'default' => '',
 			'css' => 'min-width: 377px;',
 		];
@@ -126,22 +126,22 @@ class Admin
 	{
 		$fields['title_other'] =
 		[
-			'title' => __('Other parameters', 'wc1c-main'),
+			'title' => __('Other parameters', 'wc1c-maincore'),
 			'type' => 'title',
-			'description' => __('Change of data processing behavior for environment compatibility and so on.', 'wc1c-main'),
+			'description' => __('Change of data processing behavior for environment compatibility and so on.', 'wc1c-maincore'),
 		];
 
 		$fields['php_post_max_size'] =
 		[
-			'title' => __('Maximum size of accepted requests', 'wc1c-main'),
+			'title' => __('Maximum size of accepted requests', 'wc1c-maincore'),
 			'type' => 'text',
 			'description' => sprintf
 			(
 				'%s<br />%s <b>%s</b><br />%s',
-				__('Enter the maximum size of accepted requests from 1C at a time in bytes. May be specified with a dimension suffix, such as 7M, where M = megabyte, K = kilobyte, G - gigabyte.', 'wc1c-main'),
-				__('Current WC1C limit:', 'wc1c-main'),
+				__('Enter the maximum size of accepted requests from 1C at a time in bytes. May be specified with a dimension suffix, such as 7M, where M = megabyte, K = kilobyte, G - gigabyte.', 'wc1c-maincore'),
+				__('Current WC1C limit:', 'wc1c-maincore'),
 				wc1c()->settings()->get('php_post_max_size', wc1c()->environment()->get('php_post_max_size')),
-				__('Can only decrease the value, because it must not exceed the limits from the WC1C settings.', 'wc1c-main')
+				__('Can only decrease the value, because it must not exceed the limits from the WC1C settings.', 'wc1c-maincore')
 			),
 			'default' => wc1c()->settings()->get('php_post_max_size', wc1c()->environment()->get('php_post_max_size')),
 			'css' => 'min-width: 100px;',
@@ -149,15 +149,15 @@ class Admin
 
         $fields['php_max_execution_time'] =
         [
-            'title' => __('Maximum time for execution PHP', 'wc1c-main'),
+            'title' => __('Maximum time for execution PHP', 'wc1c-maincore'),
             'type' => 'text',
             'description' => sprintf
             (
                 '%s <br /> %s <b>%s</b> <br /> %s',
-                __('Value is seconds. Algorithms of current configuration will run until a time limit is end.', 'wc1c-main'),
-                __('Current WC1C limit:', 'wc1c-main'),
+                __('Value is seconds. Algorithms of current configuration will run until a time limit is end.', 'wc1c-maincore'),
+                __('Current WC1C limit:', 'wc1c-maincore'),
                 wc1c()->settings()->get('php_max_execution_time', wc1c()->environment()->get('php_max_execution_time')),
-                __('If specify 0, the time limit will be disabled. Specifying 0 is not recommended, it is recommended not to exceed the WC1C limit.', 'wc1c-main')
+                __('If specify 0, the time limit will be disabled. Specifying 0 is not recommended, it is recommended not to exceed the WC1C limit.', 'wc1c-maincore')
             ),
             'default' => wc1c()->settings()->get('php_max_execution_time', wc1c()->environment()->get('php_max_execution_time')),
             'css' => 'min-width: 100px;',
@@ -165,35 +165,35 @@ class Admin
 
         $fields['browser_debug'] =
         [
-            'title' => __('Browser debug mode', 'wc1c-main'),
+            'title' => __('Browser debug mode', 'wc1c-maincore'),
             'type' => 'checkbox',
-            'label' => __('Check the box if you want to enable this feature. Disabled by default.', 'wc1c-main'),
+            'label' => __('Check the box if you want to enable this feature. Disabled by default.', 'wc1c-maincore'),
             'description' => sprintf
             (
                 '%s<hr>%s',
-                __('The setting is required only for debugging activities and must be turned off when such activities are completed.', 'wc1c-main'),
-                __('Only used in debug mode.', 'wc1c-main')
+                __('The setting is required only for debugging activities and must be turned off when such activities are completed.', 'wc1c-maincore'),
+                __('Only used in debug mode.', 'wc1c-maincore')
             ),
             'default' => 'no'
         ];
 
         $clean_options =
         [
-            'no' => __('Do not use', 'wc1c-main'),
-            'standard' => __('Standard', 'wc1c-main'),
+            'no' => __('Do not use', 'wc1c-maincore'),
+            'standard' => __('Standard', 'wc1c-maincore'),
         ];
 
         $fields['directory_clean_mode'] =
         [
-            'title' => __('Cleaning up a directory', 'wc1c-main'),
+            'title' => __('Cleaning up a directory', 'wc1c-maincore'),
             'type' => 'select',
             'description' => sprintf
             ('<b>%s</b> - %s<br /><b>%s</b> - %s<br /><hr>%s',
-                __('Do not use', 'wc1c-main'),
-                __('File deletion steps will be skipped.', 'wc1c-main'),
-                __('Standard', 'wc1c-main'),
-                __('The standard cleaning algorithm will be used. Suitable for most users.', 'wc1c-main'),
-                __('The choice of deletion mode must be taken very seriously.', 'wc1c-main')
+                __('Do not use', 'wc1c-maincore'),
+                __('File deletion steps will be skipped.', 'wc1c-maincore'),
+                __('Standard', 'wc1c-maincore'),
+                __('The standard cleaning algorithm will be used. Suitable for most users.', 'wc1c-maincore'),
+                __('The choice of deletion mode must be taken very seriously.', 'wc1c-maincore')
             ),
             'default' => 'standard',
             'css' => 'min-width:100%',
@@ -214,25 +214,25 @@ class Admin
 	{
 		$fields['title_sync'] =
 		[
-			'title' => __('Sync', 'wc1c-main'),
+			'title' => __('Sync', 'wc1c-maincore'),
 			'type' => 'title',
 			'description' => sprintf
 			('%s %s',
-			 __('Dispute resolution between existing products (goods) on the 1C side and in WooCommerce. For extended matching (example by SKU), must use the extension.', 'wc1c-main'),
-				__('Products will only be deleted for found matching keys.', 'wc1c-main')
+			 __('Dispute resolution between existing products (goods) on the 1C side and in WooCommerce. For extended matching (example by SKU), must use the extension.', 'wc1c-maincore'),
+				__('Products will only be deleted for found matching keys.', 'wc1c-maincore')
 			),
 		];
 
 		$fields['sync_by_id'] =
 		[
-			'title' => __('By external ID from 1C', 'wc1c-main'),
+			'title' => __('By external ID from 1C', 'wc1c-maincore'),
 			'type' => 'checkbox',
-			'label' => __('Check the box to enable. Enabled by default.', 'wc1c-main'),
+			'label' => __('Check the box to enable. Enabled by default.', 'wc1c-maincore'),
 			'description' => sprintf
 			(
 				'%s<hr> %s',
-				__('When creating new products based on data from 1C, a universal global identifier from 1C is filled in for them. Can also fill in global identifiers manually for manually created products.', 'wc1c-main'),
-				__('Enabling the option allows you to use the filled External ID to mark products (goods) as existing, and thereby run algorithms to update them.', 'wc1c-main')
+				__('When creating new products based on data from 1C, a universal global identifier from 1C is filled in for them. Can also fill in global identifiers manually for manually created products.', 'wc1c-maincore'),
+				__('Enabling the option allows you to use the filled External ID to mark products (goods) as existing, and thereby run algorithms to update them.', 'wc1c-maincore')
 			),
 			'default' => 'yes'
 		];
@@ -251,26 +251,26 @@ class Admin
 	{
 		$fields['title_clean'] =
 		[
-			'title' => __('Cleaning', 'wc1c-main'),
+			'title' => __('Cleaning', 'wc1c-maincore'),
 			'type' => 'title',
-			'description' => __('Comprehensive settings for cleaning options.', 'wc1c-main'),
+			'description' => __('Comprehensive settings for cleaning options.', 'wc1c-maincore'),
 		];
 
 		$fields['clean'] =
 		[
-			'title' => __('Enable', 'wc1c-main'),
+			'title' => __('Enable', 'wc1c-maincore'),
 			'type' => 'checkbox',
-			'label' => __('Check the box to enable this feature. Disabled by default.', 'wc1c-main'),
-			'description' => __('All products received via the CommerceML protocol and matching keys for synchronization will be placed in the Recycle Bin.', 'wc1c-main'),
+			'label' => __('Check the box to enable this feature. Disabled by default.', 'wc1c-maincore'),
+			'description' => __('All products received via the CommerceML protocol and matching keys for synchronization will be placed in the Recycle Bin.', 'wc1c-maincore'),
 			'default' => 'no'
 		];
 
 		$fields['clean_final'] =
 		[
-			'title' => __('Final removal', 'wc1c-main'),
+			'title' => __('Final removal', 'wc1c-maincore'),
 			'type' => 'checkbox',
-			'label' => __('Check the box to enable this feature. Disabled by default.', 'wc1c-main'),
-			'description' => __('All products received via the CommerceML protocol and matching keys for synchronization will be permanently deleted from the Recycle Bin.', 'wc1c-main'),
+			'label' => __('Check the box to enable this feature. Disabled by default.', 'wc1c-maincore'),
+			'description' => __('All products received via the CommerceML protocol and matching keys for synchronization will be permanently deleted from the Recycle Bin.', 'wc1c-maincore'),
 			'default' => 'no'
 		];
 
@@ -288,33 +288,33 @@ class Admin
 	{
 		$fields['title_logger'] =
 		[
-			'title' => __('Event logs', 'wc1c-main'),
+			'title' => __('Event logs', 'wc1c-maincore'),
 			'type' => 'title',
-			'description' => __('Maintaining event logs for the current configuration. You can view the logs through the extension or via FTP.', 'wc1c-main'),
+			'description' => __('Maintaining event logs for the current configuration. You can view the logs through the extension or via FTP.', 'wc1c-maincore'),
 		];
 
 		$fields['logger_level'] =
 		[
-			'title' => __('Level for events', 'wc1c-main'),
+			'title' => __('Level for events', 'wc1c-maincore'),
 			'type' => 'select',
-			'description' => __('All events of the selected level will be recorded in the log file. The higher the level, the less data is recorded.', 'wc1c-main'),
+			'description' => __('All events of the selected level will be recorded in the log file. The higher the level, the less data is recorded.', 'wc1c-maincore'),
 			'default' => '300',
 			'options' =>
 			[
-				'logger_level' => __('Use level for main events', 'wc1c-main'),
-				'100' => __('DEBUG (100)', 'wc1c-main'),
-				'200' => __('INFO (200)', 'wc1c-main'),
-				'250' => __('NOTICE (250)', 'wc1c-main'),
-				'300' => __('WARNING (300)', 'wc1c-main'),
-				'400' => __('ERROR (400)', 'wc1c-main'),
+				'logger_level' => __('Use level for main events', 'wc1c-maincore'),
+				'100' => __('DEBUG (100)', 'wc1c-maincore'),
+				'200' => __('INFO (200)', 'wc1c-maincore'),
+				'250' => __('NOTICE (250)', 'wc1c-maincore'),
+				'300' => __('WARNING (300)', 'wc1c-maincore'),
+				'400' => __('ERROR (400)', 'wc1c-maincore'),
 			],
 		];
 
 		$fields['logger_files_max'] =
 		[
-			'title' => __('Maximum files', 'wc1c-main'),
+			'title' => __('Maximum files', 'wc1c-maincore'),
 			'type' => 'text',
-			'description' => __('Log files created daily. This option on the maximum number of stored files. By default saved of the logs are for the last 30 days.', 'wc1c-main'),
+			'description' => __('Log files created daily. This option on the maximum number of stored files. By default saved of the logs are for the last 30 days.', 'wc1c-maincore'),
 			'default' => 10,
 			'css' => 'min-width: 20px;',
 		];
