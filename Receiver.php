@@ -266,7 +266,7 @@ final class Receiver
         }
 
         $credentials['login'] = sanitize_text_field($_SERVER['PHP_AUTH_USER']);
-        $credentials['password'] = isset($_SERVER['PHP_AUTH_PW']) ? (string) $_SERVER['PHP_AUTH_PW'] : '';
+        $credentials['password'] = isset($_SERVER['PHP_AUTH_PW']) ? sanitize_text_field(wp_unslash($_SERVER['PHP_AUTH_PW'])) : '';
 
         $this->core()->log()->debug(esc_html__('Credentials extracted from PHP_AUTH headers.', 'wc1c-main'), ['login' => $credentials['login'], 'password_length' => strlen($credentials['password'])]);
 
@@ -308,7 +308,7 @@ final class Receiver
 
 		$session_name = session_name();
 
-		if(session_status() === PHP_SESSION_NONE)
+		if(session_status() === PHP_SESSION_NONE && defined('WC1C_RECEIVER_REQUEST') && WC1C_RECEIVER_REQUEST)
 		{
 			$this->core()->log()->debug(esc_html__('PHP session none, start new PHP session.', 'wc1c-main'));
 			session_start();
@@ -407,7 +407,14 @@ final class Receiver
 		{
 			$warning = esc_html__('Authorization check failed - session id differs from the original.', 'wc1c-main');
 
-			$this->core()->log()->warning($warning, ['client_session_id' => $_COOKIE[$session_name], 'server_session_id' => $session_id]);
+            $this->core()->log()->warning
+            (
+                $warning,
+                [
+                    'client_session_id' => isset($_COOKIE[$session_name]) ? sanitize_text_field(wp_unslash($_COOKIE[$session_name])) : '',
+                    'server_session_id' => $session_id,
+                ]
+            );
 
 			if($send_response)
 			{
@@ -417,7 +424,7 @@ final class Receiver
 			return false;
 		}
 
-		if(session_status() === PHP_SESSION_NONE)
+		if(session_status() === PHP_SESSION_NONE && defined('WC1C_RECEIVER_REQUEST') && WC1C_RECEIVER_REQUEST)
 		{
 			session_id($session_id);
 
