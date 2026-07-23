@@ -9,6 +9,9 @@ Clean of products (goods) in WooCommerce according to data from 1C using the Com
 ## Changelog
 Базовый список изменений в схеме.
 
+## 0.5.0
+- Мелкие правки.
+
 ### 0.5.0
 - Значительно улучшена производительность.
 - Улучшена безопасность.
